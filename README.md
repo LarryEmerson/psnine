@@ -5,9 +5,14 @@ Android App for [P9](http://psnine.com/) written by React Native
 
 此分支为版本发布分支 
 
-release分支的源码与master分支完全一致,但会额外修改react-native的部分源码,以解决一些JS层无法修正的严重BUG
+release分支的源码与master分支完全一致,但会额外修改react-native的部分源码,以解决一些应用层无法修正的严重BUG
 
-注意, 修改react-native源码后, 必须重新从源码中构建react-native, 否则修改不会生效
+注意, 修改的react-native源码如果不是JS层而是Native(例如.java文件)层, 修改后必须重新从源码中构建react-native, 否则修改不会生效
+
+# 通过修改源码解决的BUG列表
+
+- [x] PanResponder Outside ListView监听冲突
+- [x] TouchableNativeFeedback无法在点击时唤出涟漪
 
 # 从源码中构建react-native
 
@@ -24,7 +29,8 @@ release分支的源码与master分支完全一致,但会额外修改react-native
 
 之后就是完全按照文档的流程了. PSNINE没有第三方依赖, 因此不必考虑这部分.
 
-## BUG: PanResponder Outside ListView
+
+# BUG: PanResponder Outside ListView
 
 如果你直接从master分支构建app, 那么在首页的社区栏目下, 很容易发现如下BUG:
 
@@ -32,12 +38,84 @@ release分支的源码与master分支完全一致,但会额外修改react-native
 
 在PSNINE中, PanResponder注册在ViewPagerAndroid上, 首页五个View都为ViewPagerAndroid的子组件, 因此这是属于PanResponder Outside ListView的手势冲突问题
 
-这个属于ScrollView的BUG非常严重.它既不是react-native层的ScrollResponder.js手势冲突导致的, 也不是react的ResponderEventPlugin.js冒泡错误导致的.而是RCTScrollView.java中, 滑动中的触摸操作触发了Android原生手势事件,导致JS层注册的手势被直接夺取了权限. 此BUG出现时, 只会触发PanResponder的onPanResponderTerminate, 不会触发onPanResponderTerminationRequest, 与[官方文档](http://facebook.github.io/react-native/releases/0.32/docs/view.html#onresponderterminate)描述一致
+## 解决方法 
 
-因此, 打开如下文件: `/Psnine/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/views/scroll/ReactScrollView.java`
+修改文件: `/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/views/scroll/ReactScrollView.java`
 
-将Line #161的`NativeGestureUtil.notifyNativeGestureStarted(this, ev);`语句注释掉, 保存后, 重新构建一次react-native即可
+将Line #161的`NativeGestureUtil.notifyNativeGestureStarted(this, ev);`语句注释掉, 如下:
+```java
+  @Override
+  public boolean onInterceptTouchEvent(MotionEvent ev) {
+    if (!mScrollEnabled) {
+      return false;
+    }
 
-另外, 按照这种办法重新构建后, 滑动ListView会触发Touchable点击效果的问题也会被修复一半: 在滑动速度较快时不会触发Touchable的点击
+    if (super.onInterceptTouchEvent(ev)) {
+      NativeGestureUtil.notifyNativeGestureStarted(this, ev);  // 注释掉此行
+      ReactScrollViewHelper.emitScrollBeginDragEvent(this);
+      mDragging = true;
+      enableFpsListener();
+      return true;
+    }
 
+    return false;
+  }
+```
+
+保存后, 从源码中构建react-native一次即可
+
+## BUG分析
+
+这个严重BUG出现在所有使用`ScrollResponder.js`的组件中, 例如ListView, ScrollView, ViewPager等等, 影响范围很大.
+
+它既不是`react-native`的`ScrollResponder.js`手势冲突导致的, 也不是`react`的`ResponderEventPlugin.js`冒泡错误导致的.而是`RCTScrollView.java`中, 滑动中的触摸操作触发了Android原生手势事件,导致JS层注册的手势被直接夺取了权限. 
+
+此BUG出现时, 只会触发PanResponder的`onPanResponderTerminate`, 不会触发`onPanResponderTerminationRequest`, 与[官方文档](http://facebook.github.io/react-native/releases/0.32/docs/view.html#onresponderterminate)描述一致
+
+
+# BUG: TouchableNativeFeedback无法在点击时唤出涟漪
+
+> `TouchableNativeFeedback`一点也不Native
+
+这个BUG真让人无语, 如果点击时没涟漪, 还要你`TouchableNativeFeedback`干什么, 黑人问号??
+
+现在大众的临时解决办法是将`TouchableNativeFeedback`的`delayPressIn`设置为`0`, 但是这样滑动ListView的时候又会触发涟漪, 这同样并不Native
+
+## 解决方法
+
+修改文件: `node_modules/react-native/Libraries/Components/Touchable/Touchable.js`
+
+将Line #715的`this.touchableHandlePress(e)` 修改为`this.touchableHandlePress(curState, nextState, signal,e)`
+
+再修改文件: `node_modules/react-native/Libraries/Components/Touchable/TouchableNativeFeedback.android.js`
+
+将`touchableHandlePress`方法修改为如下语句:
+
+```javascript
+  touchableHandlePress: function(curState, nextState, signal,e: Event) {
+
+    if (curState==='RESPONDER_ACTIVE_LONG_PRESS_IN'&& nextState=== 'NOT_RESPONDER' && signal=== 'RESPONDER_RELEASE'){
+      this.props.onPress && this.props.onPress(e);
+      return;
+    }else if(curState=== 'RESPONDER_INACTIVE_PRESS_IN'&& nextState==='NOT_RESPONDER'&& signal===  'RESPONDER_RELEASE'){
+      this._performSideEffectsForTransition( 'RESPONDER_INACTIVE_PRESS_IN', 'RESPONDER_ACTIVE_PRESS_IN', 'DELAY',e);
+      this._performSideEffectsForTransition( 'RESPONDER_ACTIVE_PRESS_IN', 'RESPONDER_ACTIVE_PRESS_IN', 'ENTER_PRESS_RECT',e);
+      this._performSideEffectsForTransition( 'RESPONDER_ACTIVE_PRESS_IN', 'RESPONDER_ACTIVE_LONG_PRESS_IN', 'LONG_PRESS_DETECTED',e);
+      this._performSideEffectsForTransition( 'RESPONDER_ACTIVE_LONG_PRESS_IN', 'RESPONDER_ACTIVE_LONG_PRESS_IN', 'ENTER_PRESS_RECT',e);
+      this._performSideEffectsForTransition( 'RESPONDER_ACTIVE_LONG_PRESS_IN', 'NOT_RESPONDER', 'RESPONDER_TERMINATED',e);
+      this.pressOutDelayTimeout = setTimeout(() => {
+          this.props.onPress && this.props.onPress(e);
+      }, 0);
+      return;
+    }
+
+    this.props.onPress && this.props.onPress(e);
+  },
+```
+
+## BUG分析
+
+这个BUG说白了就是react-native在瞬间点击时触发`onPress`后直接结束事件, 没有涟漪的出现和结束过程, 因此我们自己把这个过程加上就好
+
+但是源码里面逻辑比较乱, 涉及好多状态机, 因此我直接选择了模拟状态来触发涟漪动画, 最后用`setTimeout(()=>{},0)`的形式,在动画结束的正确时机触发onPress
 
