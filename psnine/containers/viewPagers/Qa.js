@@ -21,11 +21,11 @@ import {
 import { connect } from 'react-redux';
 import { standardColor } from '../../config/config';
 
-let WEBVIEW_REF = `WEBVIEW_REF_RANK`;
+let WEBVIEW_REF = `WEBVIEW_REF_Qa`;
 let back_image = require('image!ic_back_blue');
-let imageSize = 56;
+let imageSize = 48;
 
-class Rank extends Component {
+class Qa extends Component {
 
   constructor(props){
     super(props);
@@ -56,14 +56,15 @@ class Rank extends Component {
     // }
   }
 
+
   render() {
-    // console.log('Rank.js rendered');
+    // console.log('Qa.js rendered');
     return ( 
         <View style={{flex:3}}>
             <View style={{
                     position: 'absolute',
-                    bottom: 16,
-                    right: 16,
+                    bottom: 20,
+                    right: 20,
                     width: imageSize,
                     height: imageSize,
                     zIndex: 100,
@@ -94,7 +95,7 @@ class Rank extends Component {
                   injectedJavaScript={`$('.header').hide(); $('.scrollbar').removeClass('scrollbar').hide()`}
               />
             </KeyboardAvoidingView>
-       </View>    
+        </View>
     );
   }
 }
@@ -128,4 +129,4 @@ function mapStateToProps(state) {
 
 export default connect(
   mapStateToProps
-)(Rank);
+)(Qa);
