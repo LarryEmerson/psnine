@@ -13,6 +13,7 @@ release分支的源码与master分支完全一致,但会额外修改react-native
 
 - [x] PanResponder Outside ListView监听冲突
 - [x] TouchableNativeFeedback无法在点击时唤出涟漪
+- [x] BackAndroid无法删除已注册事件
 
 # 从源码中构建react-native
 
@@ -118,4 +119,29 @@ release分支的源码与master分支完全一致,但会额外修改react-native
 这个BUG说白了就是react-native在瞬间点击时触发`onPress`后直接结束事件, 没有涟漪的出现和结束过程, 因此我们自己把这个过程加上就好
 
 但是源码里面逻辑比较乱, 涉及好多状态机, 因此我直接选择了模拟状态来触发涟漪动画, 最后用`setTimeout(()=>{},0)`的形式,在动画结束的正确时机触发onPress
+
+
+# BUG: BackAndroid无法删除已注册事件
+
+如果直接构建master的源码, 很容易发现, 点击`创建讨论`页面的退出虚拟键, 将直接退出App而不是退出该页面. 原因在于这些页面并不是push到navigator中, 而是在首屏组件树中的.
+
+创建新监听事件前必须清除已经存在的事件(因为源码中用的是ES6的Set有序列表而不是Array), 但是删除时需要除了需要事件名, 还需要事件函数, 因为`BackAndroid`的事件一般都与`Navigator`搭配使用在App最顶层, 因此很容易出现循环引用的错误
+
+## 解决方法
+
+打开文件: `/react-native/Libraries/Utilities/BackAndroid.android.js`
+
+在Line #83 添加如下代码:
+
+```javascript
+  clearAllListeners: function(){
+     _backPressSubscriptions.clear();
+  }
+```
+
+## BUG分析
+
+这个问题说BUG其实也不算,  虽然`BackAndroid.addEventListener`返回值里已经有一个remove对象, 但是为了避免ES6循环引用时静态解析出错, 我还是修改了一下源码, 用以应付`BackAndroid和Navigator`强耦合的问题
+
+
 
