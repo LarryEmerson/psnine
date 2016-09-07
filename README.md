@@ -99,14 +99,15 @@ release分支的源码与master分支完全一致,但会额外修改react-native
       this.props.onPress && this.props.onPress(e);
       return;
     }else if(curState=== 'RESPONDER_INACTIVE_PRESS_IN'&& nextState==='NOT_RESPONDER'&& signal===  'RESPONDER_RELEASE'){
+      this._performSideEffectsForTransition( 'NOT_RESPONDER', 'RESPONDER_INACTIVE_PRESS_IN', 'RESPONDER_GRANT',e);
       this._performSideEffectsForTransition( 'RESPONDER_INACTIVE_PRESS_IN', 'RESPONDER_ACTIVE_PRESS_IN', 'DELAY',e);
-      this._performSideEffectsForTransition( 'RESPONDER_ACTIVE_PRESS_IN', 'RESPONDER_ACTIVE_PRESS_IN', 'ENTER_PRESS_RECT',e);
-      this._performSideEffectsForTransition( 'RESPONDER_ACTIVE_PRESS_IN', 'RESPONDER_ACTIVE_LONG_PRESS_IN', 'LONG_PRESS_DETECTED',e);
-      this._performSideEffectsForTransition( 'RESPONDER_ACTIVE_LONG_PRESS_IN', 'RESPONDER_ACTIVE_LONG_PRESS_IN', 'ENTER_PRESS_RECT',e);
-      this._performSideEffectsForTransition( 'RESPONDER_ACTIVE_LONG_PRESS_IN', 'NOT_RESPONDER', 'RESPONDER_TERMINATED',e);
-      this.pressOutDelayTimeout = setTimeout(() => {
-          this.props.onPress && this.props.onPress(e);
+      setTimeout(() => {
+        this.props.onPress && this.props.onPress(e);
       }, 0);
+
+      this.pressOutDelayTimeout = setTimeout(() => {
+          this._performSideEffectsForTransition( 'RESPONDER_ACTIVE_PRESS_IN', 'RESPONDER_INACTIVE_PRESS_OUT', 'LEAVE_PRESS_RECT',e);
+      }, 1000);
       return;
     }
 
@@ -116,9 +117,9 @@ release分支的源码与master分支完全一致,但会额外修改react-native
 
 ## BUG分析
 
-这个BUG说白了就是react-native在瞬间点击时触发`onPress`后直接结束事件, 没有涟漪的出现和结束过程, 因此我们自己把这个过程加上就好
+这个BUG说白了就是react-native在瞬间点击时触发`onPress`后直接结束事件, 没有控制涟漪的出现和结束, 我们自己把这个过程加上就好
 
-但是源码里面逻辑比较乱, 涉及好多状态机, 因此我直接选择了模拟状态来触发涟漪动画, 最后用`setTimeout(()=>{},0)`的形式,在动画结束的正确时机触发onPress
+源码里面逻辑比较乱, 涉及好多状态机, 但是状态机的状态转换全部都是同步操作, 因此我们可以通过触发指定的状态来触发涟漪动画, 最后用`setTimeout(()=>{},0)`的形式,在动画结束的正确时机触发onPress
 
 
 # BUG: BackAndroid无法删除已注册事件
