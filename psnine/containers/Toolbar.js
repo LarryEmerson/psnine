@@ -28,10 +28,13 @@ import SegmentedView from './SegmentedView';
 import Community from './viewPagers/Community';
 import Gene from './viewPagers/Gene';
 
+import NewBattle from '../components/new/NewBattle';
+import NewGene from '../components/new/NewGene';
+import NewTopic from '../components/new/NewTopic';
+
 import { changeSegmentIndex, changeCommunityType, changeGeneType } from '../actions/app';
 
 import { standardColor, accentColor } from '../config/config';
-
 
 let title = "PSNINE";
 let isMounted = false;
@@ -100,6 +103,9 @@ class Toolbar extends Component {
       scale: new Animated.Value(1),
       opacity: new Animated.Value(1),
       marginTop: new Animated.Value(0),
+      openTopicVal: new Animated.Value(0),
+      openBattleVal: new Animated.Value(0),
+      openGeneVal: new Animated.Value(0),
     }
   }
 
@@ -380,8 +386,100 @@ class Toolbar extends Component {
 
   }
 
+  addDefaultBackAndroidListener = () =>{
+    const { navigator: _navigator } = this.props;
+    let backPressClickTimeStamp = 0;
+    BackAndroid.addEventListener('hardwareBackPress', function () {
+      if (_navigator && _navigator.getCurrentRoutes().length > 1) {
+        _navigator.pop();
+        return true;
+      }else{
+        let timestamp = new Date();
+          if(timestamp - backPressClickTimeStamp>2000){
+            backPressClickTimeStamp = timestamp;
+          ToastAndroid.show('再按一次退出程序',2000);
+            return true;
+          }else{
+            return false;
+          }
+      }
+    });
+  }
+
+  addSwitchBackListener = (AnimatedValue) =>{
+    let config = {tension: 30, friction: 7};
+
+    BackAndroid.addEventListener('hardwareBackPress', () => {
+      if(AnimatedValue._value != 1)
+        return true;
+
+      Animated.spring(AnimatedValue, {toValue: 0, ...config}).start(()=>{
+        BackAndroid.clearAllListeners && BackAndroid.clearAllListeners();
+        this.addDefaultBackAndroidListener();
+      });
+
+      return true;
+    });
+    
+  }
+
+  pressNew = () => {
+    const { segmentedIndex } = this.props.app;
+    if (segmentedIndex == 1 || segmentedIndex == 2)
+      return;
+
+
+    const { navigator: _navigator } = this.props;
+
+    let config = {tension: 30, friction: 7};
+
+    switch (segmentedIndex) {
+      case 0 : 
+        BackAndroid.clearAllListeners && BackAndroid.clearAllListeners();
+        BackAndroid.addEventListener('hardwareBackPress', ()=>true);
+
+        setTimeout(() => {
+            Animated.spring(this.state.openTopicVal, {toValue: 1, ...config}).start(()=>{
+              this.addSwitchBackListener(this.state.openTopicVal);
+            });
+        }, 0);
+        
+        break;
+
+      case 1 : 
+
+        break;
+      case 3 : 
+        BackAndroid.clearAllListeners && BackAndroid.clearAllListeners();
+        BackAndroid.addEventListener('hardwareBackPress', ()=>true);
+
+        setTimeout(() => {
+          Animated.spring(this.state.openBattleVal, {toValue: 1, ...config}).start(()=>{
+            this.addSwitchBackListener(this.state.openBattleVal);
+          });
+        }, 0);
+
+        break;
+      case 4 : 
+        BackAndroid.clearAllListeners && BackAndroid.clearAllListeners();
+        BackAndroid.addEventListener('hardwareBackPress', ()=>true);
+        
+        setTimeout(() => {
+          Animated.spring(this.state.openGeneVal, {toValue: 1, ...config}).start(()=>{
+            this.addSwitchBackListener(this.state.openGeneVal);
+          });
+        }, 0);
+
+        break;
+        
+    }
+
+
+  }
+
   render() {
     const { app: appReducer } = this.props;
+    const { segmentedIndex } = this.props.app;
     // console.log('Toolbar.js rendered');
     return (
       <Animated.View 
@@ -402,6 +500,7 @@ class Toolbar extends Component {
           {this._renderSegmentedView() }
           <Animated.View 
             ref={float=>this.float=float}
+            collapsable ={true}
             style={{
               width: 56,
               height: 56,
@@ -411,6 +510,7 @@ class Toolbar extends Component {
               bottom: 16,
               right: 16,
               elevation: 6 ,
+              zIndex: 1,
               opacity: this.state.opacity,
 
               transform: [{
@@ -422,30 +522,32 @@ class Toolbar extends Component {
                           }),
                         }]
           }}>
-          <TouchableHighlight 
-            onPress={
-              ()=>{}
-            }
-            delayPressIn={0}
-            activeOpacity={1}
-            underlayColor={accentColor}
-            onHideUnderlay={()=>{
-              this.float.setNativeProps({
-                style :{
-                elevation: 6,
-              }});
-            }}
-            onShowUnderlay={()=>{
-              this.float.setNativeProps({
-                style :{
-                elevation: 12,
-              }});
-            }}
+          
+          <TouchableNativeFeedback 
+            onPress={this.pressNew}
+            //delayPressIn={0}
+            //activeOpacity={1}
+            //underlayColor={accentColor}
+            background={TouchableNativeFeedback.SelectableBackgroundBorderless()}
+            // onPressIn={()=>{
+            //   this.float.setNativeProps({
+            //     style :{
+            //     elevation: 6,
+            //   }});
+            // }}
+            // onPressOut={()=>{
+            //   this.float.setNativeProps({
+            //     style :{
+            //     elevation: 12,
+            //   }});
+            // }}
             style={{
               width: 56,
               height: 56,
               borderRadius: 30,
               flex:1,
+              zIndex: 1,
+              backgroundColor: accentColor,
             }}>
             <View style={{borderRadius: 30,}}>
               <Image source={require('image!ic_add_white')}
@@ -454,10 +556,24 @@ class Toolbar extends Component {
                       top:0,
                   }}
               />
-
             </View>
-          </TouchableHighlight>
+          </TouchableNativeFeedback>
           </Animated.View>
+          <NewTopic 
+              addDefaultBackAndroidListener={this.addDefaultBackAndroidListener}
+              openVal={this.state.openTopicVal} 
+              marginTop={this.state.marginTop}
+          />
+          <NewBattle 
+              addDefaultBackAndroidListener={this.addDefaultBackAndroidListener}
+              openVal={this.state.openBattleVal} 
+              marginTop={this.state.marginTop}
+          />
+          <NewGene
+              addDefaultBackAndroidListener={this.addDefaultBackAndroidListener} 
+              openVal={this.state.openGeneVal} 
+              marginTop={this.state.marginTop}
+          />
       </Animated.View>
     )
   }
