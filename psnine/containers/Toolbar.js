@@ -34,7 +34,7 @@ import NewTopic from '../components/new/NewTopic';
 
 import { changeSegmentIndex, changeCommunityType, changeGeneType } from '../actions/app';
 
-import { standardColor, accentColor } from '../config/config';
+import { standardColor, accentColor } from '../config/colorConfig';
 
 let title = "PSNINE";
 let isMounted = false;
@@ -106,6 +106,9 @@ class Toolbar extends Component {
       openTopicVal: new Animated.Value(0),
       openBattleVal: new Animated.Value(0),
       openGeneVal: new Animated.Value(0),
+      innerTopicMarginTop: new Animated.Value(0),
+      innerBattleMarginTop: new Animated.Value(0),
+      innerGeneMarginTop: new Animated.Value(0),
     }
   }
 
@@ -118,6 +121,7 @@ class Toolbar extends Component {
             navigator:this.props.navigator, 
             toolbarDispatch: this.props.dispatch,
             segmentedIndex: this.props.app.segmentedIndex,
+            modeInfo:this.props.modeInfo,
         }} 
         titles={titlesArr}
         index={0}
@@ -154,29 +158,25 @@ class Toolbar extends Component {
   }
 
   componentDidMount() {
-        //this.parallelFadeIn(1);
+
   }
 
   componentWillMount() {
         this.panResponder = PanResponder.create({  
 
             onStartShouldSetPanResponderCapture: (e, gesture) =>{ 
-              // console.log('1');
               return false; 
             },
 
             onMoveShouldSetPanResponderCapture:(e, gesture) =>{ 
               let shouldSet = Math.abs(gesture.dy) >=4;
-              // console.log('2');
               return shouldSet; 
             },
 
             onPanResponderGrant:(e, gesture) => {
-              // console.log('3');
 
             },
             onPanResponderMove: (e, gesture) => {
-              // console.log(`====>${gesture.vy} ${gesture.vy<=5}`);
               let dy = gesture.dy;
               let vy = gesture.vy;
               if(dy < 0){
@@ -199,18 +199,15 @@ class Toolbar extends Component {
 
             },
             onPanResponderTerminationRequest : (evt, gesture) => {  
-              // console.log('6');
               return true;
             },
             onPanResponderTerminate: (evt, gesture) => {  
               
             },
             onShouldBlockNativeResponder: (evt, gesture) => {  
-              // console.log('8');
               return true;
             },
             onPanResponderReject: (evt, gesture) => {  
-              // console.log('9');
               return false;
             },
             onPanResponderEnd: (evt, gesture) => {  
@@ -391,31 +388,44 @@ class Toolbar extends Component {
     let backPressClickTimeStamp = 0;
     BackAndroid.addEventListener('hardwareBackPress', function () {
       if (_navigator && _navigator.getCurrentRoutes().length > 1) {
+
         _navigator.pop();
         return true;
+
       }else{
+
         let timestamp = new Date();
-          if(timestamp - backPressClickTimeStamp>2000){
-            backPressClickTimeStamp = timestamp;
+
+        if(timestamp - backPressClickTimeStamp>2000){
+          backPressClickTimeStamp = timestamp;
           ToastAndroid.show('再按一次退出程序',2000);
-            return true;
-          }else{
-            return false;
-          }
+          return true;
+        }else{
+          return false;
+        }
+
       }
     });
   }
 
-  addSwitchBackListener = (AnimatedValue) =>{
+  addSwitchBackListener = (AnimatedValue, MarginTopValue) =>{
     let config = {tension: 30, friction: 7};
 
     BackAndroid.addEventListener('hardwareBackPress', () => {
-      if(AnimatedValue._value != 1)
-        return true;
+      // if(AnimatedValue._value != 1)
+      //   return true;
 
-      Animated.spring(AnimatedValue, {toValue: 0, ...config}).start(()=>{
-        BackAndroid.clearAllListeners && BackAndroid.clearAllListeners();
-        this.addDefaultBackAndroidListener();
+      Animated.parallel([AnimatedValue,MarginTopValue].map((property,index) => {
+          if(index == 0){
+            return Animated.spring(property, {toValue: 0, ...config});
+          }else if(index == 1){
+            return Animated.spring(property, {toValue: 0, ...config});
+          }
+      })).start(({ finished })=>{
+          if (!finished) return;
+
+          BackAndroid.clearAllListeners && BackAndroid.clearAllListeners();
+          BackAndroid.clearAllListeners && this.addDefaultBackAndroidListener();
       });
 
       return true;
@@ -423,11 +433,16 @@ class Toolbar extends Component {
     
   }
 
+  addEmptyBackListener = () =>{
+    BackAndroid.addEventListener('hardwareBackPress', () => true);
+  }
+
   pressNew = () => {
+
     const { segmentedIndex } = this.props.app;
+
     if (segmentedIndex == 1 || segmentedIndex == 2)
       return;
-
 
     const { navigator: _navigator } = this.props;
 
@@ -436,11 +451,22 @@ class Toolbar extends Component {
     switch (segmentedIndex) {
       case 0 : 
         BackAndroid.clearAllListeners && BackAndroid.clearAllListeners();
+<<<<<<< HEAD
         BackAndroid.clearAllListeners &&BackAndroid.addEventListener('hardwareBackPress', ()=>true);
 
         setTimeout(() => {
             Animated.spring(this.state.openTopicVal, {toValue: 1, ...config}).start(()=>{
               BackAndroid.clearAllListeners &&this.addSwitchBackListener(this.state.openTopicVal);
+=======
+        BackAndroid.clearAllListeners && this.addSwitchBackListener(this.state.openTopicVal,this.state.innerTopicMarginTop);
+
+        setTimeout(() => {
+            Animated.spring(this.state.openTopicVal, {toValue: 1, ...config}).start(({ finished })=>{
+              if (!finished) return;
+
+              BackAndroid.clearAllListeners && BackAndroid.clearAllListeners();
+              BackAndroid.clearAllListeners && this.addSwitchBackListener(this.state.openTopicVal,this.state.innerTopicMarginTop);
+>>>>>>> master
             });
         }, 0);
         
@@ -451,22 +477,44 @@ class Toolbar extends Component {
         break;
       case 3 : 
         BackAndroid.clearAllListeners && BackAndroid.clearAllListeners();
+<<<<<<< HEAD
         BackAndroid.clearAllListeners &&BackAndroid.addEventListener('hardwareBackPress', ()=>true);
 
         setTimeout(() => {
           Animated.spring(this.state.openBattleVal, {toValue: 1, ...config}).start(()=>{
             BackAndroid.clearAllListeners &&this.addSwitchBackListener(this.state.openBattleVal);
+=======
+        BackAndroid.clearAllListeners && this.addSwitchBackListener(this.state.openBattleVal,this.state.innerBattleMarginTop);
+
+        setTimeout(() => {
+          Animated.spring(this.state.openBattleVal, {toValue: 1, ...config}).start(({ finished })=>{
+            if (!finished) return;
+
+            BackAndroid.clearAllListeners && BackAndroid.clearAllListeners();
+            BackAndroid.clearAllListeners && this.addSwitchBackListener(this.state.openBattleVal,this.state.innerBattleMarginTop);
+>>>>>>> master
           });
         }, 0);
 
         break;
       case 4 : 
         BackAndroid.clearAllListeners && BackAndroid.clearAllListeners();
+<<<<<<< HEAD
         BackAndroid.clearAllListeners &&BackAndroid.addEventListener('hardwareBackPress', ()=>true);
         
         setTimeout(() => {
           Animated.spring(this.state.openGeneVal, {toValue: 1, ...config}).start(()=>{
             BackAndroid.clearAllListeners &&this.addSwitchBackListener(this.state.openGeneVal);
+=======
+        BackAndroid.clearAllListeners && this.addSwitchBackListener(this.state.openGeneVal,this.state.innerGeneMarginTop);
+
+        setTimeout(() => {
+          Animated.spring(this.state.openGeneVal, {toValue: 1, ...config}).start(({ finished })=>{
+            if (!finished) return;
+
+            BackAndroid.clearAllListeners && BackAndroid.clearAllListeners();
+            BackAndroid.clearAllListeners && this.addSwitchBackListener(this.state.openGeneVal,this.state.innerGeneMarginTop);
+>>>>>>> master
           });
         }, 0);
 
@@ -490,7 +538,7 @@ class Toolbar extends Component {
         <ToolbarAndroid
           navIcon={require('image!ic_menu_white') }
           title={title}
-          style={styles.toolbar}
+          style={[styles.toolbar, {backgroundColor: this.props.modeInfo.standardColor,}]}
           titleColor="white"
           overflowIcon={require('image!ic_more_white')}
           actions={toolbarActions[appReducer.segmentedIndex]}
@@ -563,16 +611,25 @@ class Toolbar extends Component {
               addDefaultBackAndroidListener={this.addDefaultBackAndroidListener}
               openVal={this.state.openTopicVal} 
               marginTop={this.state.marginTop}
+              innerMarginTop={this.state.innerTopicMarginTop}
+              title={'创建讨论'}
+              {...{navigator:this.props.navigator, modeInfo:this.props.modeInfo }}
           />
           <NewBattle 
               addDefaultBackAndroidListener={this.addDefaultBackAndroidListener}
               openVal={this.state.openBattleVal} 
               marginTop={this.state.marginTop}
+              innerMarginTop={this.state.innerBattleMarginTop}
+              title={'创建约战'}
+              {...{navigator:this.props.navigator, modeInfo:this.props.modeInfo }}
           />
           <NewGene
               addDefaultBackAndroidListener={this.addDefaultBackAndroidListener} 
               openVal={this.state.openGeneVal} 
               marginTop={this.state.marginTop}
+              innerMarginTop={this.state.innerGeneMarginTop}
+              title={'创建基因'}
+              {...{navigator:this.props.navigator, modeInfo:this.props.modeInfo }}
           />
       </Animated.View>
     )

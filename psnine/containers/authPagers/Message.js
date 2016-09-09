@@ -15,7 +15,7 @@ import {
 
 import { connect } from 'react-redux';
 import { getTopicList } from '../../actions/community.js';
-import { standardColor, nodeColor, idColor  } from '../../config/config';
+import { standardColor, nodeColor, idColor  } from '../../config/colorConfig';
 
 import CommunityTopic from '../../components/CommunityTopic';
 
@@ -100,7 +100,7 @@ class Message extends Component {
     return (
       <View rowID={ rowID } style={{              
             marginTop: 7,
-            backgroundColor: '#FFFFFF',
+            backgroundColor: this.props.modeInfo.backgroundColor,
             elevation: 1,
         }}>
         <TouchableElement  
@@ -118,13 +118,13 @@ class Message extends Component {
               <Text
                 ellipsizeMode={'tail'}
                 numberOfLines={3}
-                style={{ flex: 2.5,color: 'black', }}>
+                style={{ flex: 2.5,color: this.props.modeInfo.titleTextColor, }}>
                 {rowData.content}
               </Text>
 
               <View style={{ flex: 1.1, flexDirection: 'row', justifyContent :'space-between' }}>
                 <Text style={{ flex: -1, color: idColor,textAlign : 'center', textAlignVertical: 'center' }}>{rowData.psnid}</Text>
-                <Text style={{ flex: -1,textAlign : 'center', textAlignVertical: 'center' }}>{fromNow}</Text>
+                <Text style={{ flex: -1,color: this.props.modeInfo.titleTextColor,textAlign : 'center', textAlignVertical: 'center' }}>{fromNow}</Text>
               </View>
 
             </View>
@@ -150,7 +150,7 @@ class Message extends Component {
     // console.log('Message.js rendered');
     return (
           <View 
-            style={{flex:1}}
+            style={{flex:1,backgroundColor:this.props.modeInfo.brighterLevelOne}}
             onStartShouldSetResponder={() => false}
             onMoveShouldSetResponder={() => false}
             >
@@ -158,7 +158,7 @@ class Message extends Component {
                 navIcon={require('image!ic_back_white')}
                 overflowIcon={require('image!ic_more_white')}
                 title={'我的消息'}
-                style={styles.toolbar}
+                style={[styles.toolbar, {backgroundColor: this.props.modeInfo.standardColor,}]}
                 actions={toolbarActions}
                 onIconClicked={this.onNavClicked}
               />
@@ -167,6 +167,7 @@ class Message extends Component {
                   <RefreshControl
                     refreshing={this.state.messages.length == 0 ? true : false}
                     colors={[standardColor]}
+                    progressBackgroundColor={this.props.modeInfo.backgroundColor}
                     />
                 }
                 pageSize = {32}

@@ -23,7 +23,7 @@ import {
 
 import { connect } from 'react-redux';
 
-import { standardColor, accentColor } from '../../config/config';
+import { standardColor, accentColor } from '../../config/colorConfig';
 
 import { pngPrefix, getDealURL, getHappyPlusOneURL, getStoreURL } from '../../dao/dao';
 
@@ -92,11 +92,11 @@ class Login extends Component {
   render() {
     // console.log('Loggin.js rendered');
     return (
-      <View style={{ flex: 1, backgroundColor:'white' }}>
+      <View style={{ flex: 1, backgroundColor:this.props.modeInfo.brighterLevelOne }}>
         <ToolbarAndroid
           navIcon={require('image!ic_back_white') }
           title={title}
-          style={styles.toolbar}
+          style={[styles.toolbar, {backgroundColor: this.props.modeInfo.standardColor,}]}
           onIconClicked={this._pressButton}
           />
         <KeyboardAvoidingView behavior={'padding'} style={styles.KeyboardAvoidingView} >
@@ -104,7 +104,8 @@ class Login extends Component {
             <Text style={styles.mainFont}>PSN ID :</Text>
             <TextInput placeholder="不是邮箱" underlineColorAndroid={accentColor}
               onChange={({nativeEvent})=>{ this.setState({psnid:nativeEvent.text})}}
-              style={styles.textInput}
+              style={[styles.textInput, { color:this.props.modeInfo.standardTextColor }]}
+              placeholderTextColor={this.props.modeInfo.standardTextColor}
             />
           </View>
 
@@ -112,7 +113,8 @@ class Login extends Component {
             <Text style={styles.mainFont}>密码 :</Text>
             <TextInput placeholder="你在本站完成认证时的密码" underlineColorAndroid={accentColor} secureTextEntry={true}
               onChange={({nativeEvent})=>{ this.setState({password:nativeEvent.text})}}
-              style={styles.textInput}
+              style={[styles.textInput, { color:this.props.modeInfo.standardTextColor }]}
+              placeholderTextColor={this.props.modeInfo.standardTextColor}
             />
             <Text>忘记密码</Text>
           </View>
@@ -126,13 +128,13 @@ class Login extends Component {
               onPress={this.login}
               >
               <View style={styles.submitButton}>
-                <Text>提交</Text>
+                <Text style={[styles.textInput, { color:this.props.modeInfo.titleTextColor }]}>提交</Text>
               </View>
             </TouchableNativeFeedback>
           </View>
 
           <View style={styles.regist}>
-            <Text>如果是第一次使用PSNINE，请先完成</Text>
+            <Text style={[styles.textInput, { color:this.props.modeInfo.standardTextColor }]}>如果是第一次使用PSNINE，请先完成</Text>
             <TouchableNativeFeedback
               onPress={this.regist}
             >

@@ -14,14 +14,14 @@ import {
 
 import { connect } from 'react-redux';
 import { getTopicList } from '../../actions/community.js';
-import { standardColor, nodeColor, idColor  } from '../../config/config';
+import { standardColor, nodeColor, idColor  } from '../../config/colorConfig';
 
 import CommunityTopic from '../../components/CommunityTopic';
 
 import { getTopicURL } from '../../dao/dao';
 import moment from '../../utils/moment';
 
-const dataSource = new ListView.DataSource({
+let dataSource = new ListView.DataSource({
   rowHasChanged: (row1, row2) => {
     return row1.id !== row2.id || row1.views !== row2.views || row1.count !== row2.count;
   },
@@ -80,7 +80,7 @@ class Community extends Component {
     return (
       <View rowID={ rowID } style={{              
             marginTop: 7,
-            backgroundColor: '#FFFFFF',
+            backgroundColor: this.props.modeInfo.backgroundColor,
             elevation: 1,
         }}>
         <TouchableElement  
@@ -98,15 +98,15 @@ class Community extends Component {
               <Text
                 ellipsizeMode={'tail'}
                 numberOfLines={3}
-                style={{ flex: 2.5,color: 'black', }}>
+                style={{ flex: 2.5,color: this.props.modeInfo.titleTextColor, }}>
                 {rowData.title}
               </Text>
 
               <View style={{ flex: 1.1, flexDirection: 'row', justifyContent :'space-between' }}>
                 <Text style={{ flex: -1, color: idColor,textAlign : 'center', textAlignVertical: 'center' }}>{rowData.psnid}</Text>
-                <Text style={{ flex: -1,textAlign : 'center', textAlignVertical: 'center' }}>{fromNow}</Text>
-                <Text style={{ flex: -1,textAlign : 'center', textAlignVertical: 'center' }}>{rowData.count}回复</Text>
-                <Text style={{ flex: -1,textAlign : 'center', textAlignVertical: 'center' }}>{rowData.views}浏览</Text>
+                <Text style={{ flex: -1, color: this.props.modeInfo.standardTextColor,textAlign : 'center', textAlignVertical: 'center' }}>{fromNow}</Text>
+                <Text style={{ flex: -1, color: this.props.modeInfo.standardTextColor,textAlign : 'center', textAlignVertical: 'center' }}>{rowData.count}回复</Text>
+                <Text style={{ flex: -1, color: this.props.modeInfo.standardTextColor,textAlign : 'center', textAlignVertical: 'center' }}>{rowData.views}浏览</Text>
               </View>
 
             </View>
@@ -120,6 +120,10 @@ class Community extends Component {
   componentWillReceiveProps = (nextProps) => {
     if(this.props.communityType != nextProps.communityType){
       this.props.communityType = nextProps.communityType;
+      this._onRefresh(nextProps.communityType);
+    }else if(this.props.modeInfo.isNightMode != nextProps.modeInfo.isNightMode ){
+      this.props.modeInfo == nextProps.modeInfo;
+      dataSource = dataSource.cloneWithRows([]);
       this._onRefresh(nextProps.communityType);
     }
 
@@ -190,10 +194,12 @@ class Community extends Component {
               refreshing={false}
               onRefresh={this._onRefresh}
               colors={[standardColor]}
+              progressBackgroundColor={this.props.modeInfo.backgroundColor}
               ref={ ref => this.refreshControl = ref}
               />
           }
           ref={listView=>this.listView=listView}
+          style={{backgroundColor: this.props.modeInfo.brighterLevelOne}}
           pageSize = {32}
           initialListSize = {32}
           removeClippedSubviews={false}

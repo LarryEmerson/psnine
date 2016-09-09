@@ -14,7 +14,7 @@ import {
 
 import { connect } from 'react-redux';
 import { getBattleList } from '../../actions/battle.js';
-import { standardColor, nodeColor, idColor, accentColor  } from '../../config/config';
+import { standardColor, nodeColor, idColor, accentColor  } from '../../config/colorConfig';
 
 import CommunityTopic from '../../components/CommunityTopic';
 
@@ -28,7 +28,7 @@ let getRowData = (dataBlob, sectionID, rowID) => {
   return dataBlob[rowID];
 };
 
-const dataSource = new ListView.DataSource({
+let dataSource = new ListView.DataSource({
   getRowData: getRowData,
   getSectionHeaderData: getSectionData,
   rowHasChanged: (row1, row2) => row1.id !== row2.id,
@@ -92,7 +92,7 @@ class Battle extends Component {
             marginTop: rowID.indexOf('R0') == -1 ? 0:0,
             marginLeft: 7,
             marginRight: 7,
-            backgroundColor: '#FFFFFF',
+            backgroundColor: this.props.modeInfo.backgroundColor,
             elevation: 2,
         }}>
         <TouchableElement  
@@ -114,22 +114,22 @@ class Battle extends Component {
               <Text
                 ellipsizeMode={'tail'}
                 numberOfLines={1}
-                style={{ flex: -1,color: 'black', fontSize: 15 }}>
+                style={{ flex: -1,color: this.props.modeInfo.titleTextColor, fontSize: 15 }}>
                 { title }
               </Text>
 
               <Text>
-                <Text style={{ flex: -1,color: 'black' }} numberOfLines={1}>{startTime}</Text>
-                <Text style={{ flex: -1 }} numberOfLines={1}> 开始</Text>
+                <Text style={{ flex: -1,color: this.props.modeInfo.titleTextColor }} numberOfLines={1}>{startTime}</Text>
+                <Text style={{ flex: -1, color: this.props.modeInfo.standardTextColor }} numberOfLines={1}> 开始</Text>
               </Text>
 
               <Text>
-                <Text style={{ flex: -1,color: 'black' }} numberOfLines={1}>{rowData.num}</Text>
-                <Text style={{ flex: -1 }} numberOfLines={1}> 人招募</Text>
+                <Text style={{ flex: -1,color: this.props.modeInfo.titleTextColor }} numberOfLines={1}>{rowData.num}</Text>
+                <Text style={{ flex: -1,color: this.props.modeInfo.standardTextColor }} numberOfLines={1}> 人招募</Text>
               </Text>
 
               <View style={{ flex: 1, flexDirection: 'row', justifyContent :'space-between' }}>
-                <Text style={{ flex: -1,textAlign : 'center', textAlignVertical: 'center' }}>{rowData.platform.split(',').join(' ')}</Text>
+                <Text style={{ flex: -1,color: this.props.modeInfo.standardTextColor,textAlign : 'center', textAlignVertical: 'center' }}>{rowData.platform.split(',').join(' ')}</Text>
                 <Text style={{ flex: -1, color: idColor, marginRight: -60 , textAlignVertical: 'center' }}>{rowData.psnid}</Text>
               </View>
 
@@ -167,6 +167,15 @@ class Battle extends Component {
       </View>
     );
   };
+
+
+  componentWillReceiveProps(nextProps) {
+    if(this.props.modeInfo.isNightMode != nextProps.modeInfo.isNightMode ){
+      this.props.modeInfo == nextProps.modeInfo;
+      dataSource = dataSource.cloneWithRows([]);
+      this._onRefresh();
+    }
+  }
 
 
   componentDidMount = () => {
@@ -225,8 +234,10 @@ class Battle extends Component {
               refreshing={false}
               onRefresh={this._onRefresh}
               colors={[standardColor]}
+              progressBackgroundColor={this.props.modeInfo.backgroundColor}
               />
           }
+          style={{backgroundColor: this.props.modeInfo.brighterLevelOne}}
           pageSize = {32}
           removeClippedSubviews={false}
           enableEmptySections={true}
