@@ -1,4 +1,4 @@
-# P9-app
+# PSNINE
 Android App for [P9](http://psnine.com/) written by React Native
 
 # Release 分支说明
@@ -7,7 +7,7 @@ Android App for [P9](http://psnine.com/) written by React Native
 
 release分支的源码与master分支完全一致,但会额外修改react-native的部分源码,以解决一些应用层无法修正的严重BUG
 
-注意, 修改的react-native源码如果不是JS层而是Native(例如.java文件)层, 修改后必须重新从源码中构建react-native, 否则修改不会生效
+注意, 修改的react-native源码如果不是JS层而是Native(例如java文件)层, 修改后必须从源码中重新构建react-native, 否则修改不会生效
 
 # 通过修改源码解决的BUG列表
 
@@ -36,6 +36,14 @@ release分支的源码与master分支完全一致,但会额外修改react-native
 如果你直接从master分支构建app, 那么在首页的社区栏目下, 很容易发现如下BUG:
 
 > 上拉ListView触发工具栏的隐藏后, ListView仍然在滑动的情况下, 如果此时立即下拉ListView, 工具栏将无法被拉出来正常显示
+
+修正前如下, 可以看到在滑动中再反方向上滑时, 顶部工具栏完全没有反应:
+
+![alt](https://smallpath.me/static/upload/201609/9Nxf9gyka_g_Q8rL5HmiIxQv.gif)
+
+修正后如下, 可以看到这次上滑已经有反应了:
+
+![alt](https://smallpath.me/static/upload/201609/VO0OkIicO7Pz7BCMGnSBNI9Z.gif)
 
 在PSNINE中, PanResponder注册在ViewPagerAndroid上, 首页五个View都为ViewPagerAndroid的子组件, 因此这是属于PanResponder Outside ListView的手势冲突问题
 
@@ -76,11 +84,23 @@ release分支的源码与master分支完全一致,但会额外修改react-native
 
 # BUG: TouchableNativeFeedback无法在点击时唤出涟漪
 
-> `TouchableNativeFeedback`一点也不Native
+> TouchableNativeFeedback一点也不Native
 
-这个BUG真让人无语, 如果点击时没涟漪, 还要你`TouchableNativeFeedback`干什么, 黑人问号??
+`TouchableNativeFeedback`在默认情况下, 点击时没有涟漪的, 如下图:
 
-现在大众的临时解决办法是将`TouchableNativeFeedback`的`delayPressIn`设置为`0`, 但是这样滑动ListView的时候又会触发涟漪, 这同样并不Native
+![alt](https://smallpath.me/static/upload/201609/rEVBByWlliB3vsbmNqSfTLyY.gif)
+
+这个BUG真让人无语, 如果点击时没涟漪, 还要你`TouchableNativeFeedback`干什么?
+
+现在大众的临时解决办法是将`TouchableNativeFeedback`的`delayPressIn`设置为`0`, 但是这样滑动ListView的时候又会触发涟漪, 如下图:
+
+![alt](https://smallpath.me/static/upload/201609/TNRKo-5Zo7kJOC1ZELUu3H7J.gif)
+
+这同样并不Native
+
+使用下面的解决方法, 得到的最终效果如下:
+
+![alt](https://smallpath.me/static/upload/201609/FvHYYd41KhbGufe7NnUf3qrh.gif)
 
 ## 解决方法
 
@@ -126,7 +146,7 @@ release分支的源码与master分支完全一致,但会额外修改react-native
 
 如果直接构建master的源码, 很容易发现, 点击`创建讨论`页面的退出虚拟键, 将直接退出App而不是退出该页面. 原因在于这些页面并不是push到navigator中, 而是在首屏组件树中的.
 
-创建新监听事件前必须清除已经存在的事件(因为源码中用的是ES6的Set有序列表而不是Array), 但是删除时需要除了需要事件名, 还需要事件函数, 因为`BackAndroid`的事件一般都与`Navigator`搭配使用在App最顶层, 因此很容易出现循环引用的错误
+创建新监听事件前必须清除已经存在的事件(因为源码中用的是ES6的Set有序列表而不是Array), 但是删除时需要事件函数, 因为`BackAndroid`的事件一般都与`Navigator`搭配使用在App最顶层, 而且React强调单向数据流, 因此子组件拿顶层组件的数据非常麻烦
 
 ## 解决方法
 
@@ -143,6 +163,8 @@ release分支的源码与master分支完全一致,但会额外修改react-native
 ## BUG分析
 
 这个问题说BUG其实也不算,  虽然`BackAndroid.addEventListener`返回值里已经有一个remove对象, 但是为了避免ES6循环引用时静态解析出错, 我还是修改了一下源码, 用以应付`BackAndroid和Navigator`强耦合的问题
+
+这种解决方法仍然是治标不治本. 最好是将Set替换成Array, 再将其完全暴露出来, 这样可以将监听事件的权限完全交给开发者, 并且可以避免Set删除时十几毫秒的耗时(用户退出时如果恰好碰上这段时间,APP将直接退出而没有任何提示)
 
 
 

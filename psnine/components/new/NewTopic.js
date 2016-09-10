@@ -68,12 +68,6 @@ class NewTopic extends Component {
     let { openVal, innerMarginTop } = this.props;
     let config = {tension: 30, friction: 7};
 
-<<<<<<< HEAD
-    Animated.spring(this.props.openVal, {toValue: 0, ...config}).start(()=>{
-        BackAndroid.clearAllListeners &&this.props.addDefaultBackAndroidListener();
-    });
-    
-=======
       BackAndroid.clearAllListeners && BackAndroid.clearAllListeners();
       BackAndroid.clearAllListeners && this.props.addDefaultBackAndroidListener();
 
@@ -84,7 +78,6 @@ class NewTopic extends Component {
         return Animated.spring(property, {toValue: 0, ...config});
       }
     })).start();
->>>>>>> master
   }
 
 

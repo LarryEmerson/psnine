@@ -451,13 +451,6 @@ class Toolbar extends Component {
     switch (segmentedIndex) {
       case 0 : 
         BackAndroid.clearAllListeners && BackAndroid.clearAllListeners();
-<<<<<<< HEAD
-        BackAndroid.clearAllListeners &&BackAndroid.addEventListener('hardwareBackPress', ()=>true);
-
-        setTimeout(() => {
-            Animated.spring(this.state.openTopicVal, {toValue: 1, ...config}).start(()=>{
-              BackAndroid.clearAllListeners &&this.addSwitchBackListener(this.state.openTopicVal);
-=======
         BackAndroid.clearAllListeners && this.addSwitchBackListener(this.state.openTopicVal,this.state.innerTopicMarginTop);
 
         setTimeout(() => {
@@ -466,7 +459,6 @@ class Toolbar extends Component {
 
               BackAndroid.clearAllListeners && BackAndroid.clearAllListeners();
               BackAndroid.clearAllListeners && this.addSwitchBackListener(this.state.openTopicVal,this.state.innerTopicMarginTop);
->>>>>>> master
             });
         }, 0);
         
@@ -477,13 +469,6 @@ class Toolbar extends Component {
         break;
       case 3 : 
         BackAndroid.clearAllListeners && BackAndroid.clearAllListeners();
-<<<<<<< HEAD
-        BackAndroid.clearAllListeners &&BackAndroid.addEventListener('hardwareBackPress', ()=>true);
-
-        setTimeout(() => {
-          Animated.spring(this.state.openBattleVal, {toValue: 1, ...config}).start(()=>{
-            BackAndroid.clearAllListeners &&this.addSwitchBackListener(this.state.openBattleVal);
-=======
         BackAndroid.clearAllListeners && this.addSwitchBackListener(this.state.openBattleVal,this.state.innerBattleMarginTop);
 
         setTimeout(() => {
@@ -492,20 +477,12 @@ class Toolbar extends Component {
 
             BackAndroid.clearAllListeners && BackAndroid.clearAllListeners();
             BackAndroid.clearAllListeners && this.addSwitchBackListener(this.state.openBattleVal,this.state.innerBattleMarginTop);
->>>>>>> master
           });
         }, 0);
 
         break;
       case 4 : 
         BackAndroid.clearAllListeners && BackAndroid.clearAllListeners();
-<<<<<<< HEAD
-        BackAndroid.clearAllListeners &&BackAndroid.addEventListener('hardwareBackPress', ()=>true);
-        
-        setTimeout(() => {
-          Animated.spring(this.state.openGeneVal, {toValue: 1, ...config}).start(()=>{
-            BackAndroid.clearAllListeners &&this.addSwitchBackListener(this.state.openGeneVal);
-=======
         BackAndroid.clearAllListeners && this.addSwitchBackListener(this.state.openGeneVal,this.state.innerGeneMarginTop);
 
         setTimeout(() => {
@@ -514,7 +491,6 @@ class Toolbar extends Component {
 
             BackAndroid.clearAllListeners && BackAndroid.clearAllListeners();
             BackAndroid.clearAllListeners && this.addSwitchBackListener(this.state.openGeneVal,this.state.innerGeneMarginTop);
->>>>>>> master
           });
         }, 0);
 
