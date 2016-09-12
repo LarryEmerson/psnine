@@ -39,11 +39,11 @@ release分支的源码与master分支完全一致,但会额外修改react-native
 
 修正前如下, 可以看到在滑动中再反方向上滑时, 顶部工具栏完全没有反应:
 
-![alt](https://smallpath.me/static/upload/201609/9Nxf9gyka_g_Q8rL5HmiIxQv.gif)
+[修改前](https://smallpath.me/static/upload/201609/9Nxf9gyka_g_Q8rL5HmiIxQv.gif)
 
 修正后如下, 可以看到这次上滑已经有反应了:
 
-![alt](https://smallpath.me/static/upload/201609/VO0OkIicO7Pz7BCMGnSBNI9Z.gif)
+[修改后](https://smallpath.me/static/upload/201609/VO0OkIicO7Pz7BCMGnSBNI9Z.gif)
 
 在PSNINE中, PanResponder注册在ViewPagerAndroid上, 首页五个View都为ViewPagerAndroid的子组件, 因此这是属于PanResponder Outside ListView的手势冲突问题
 
@@ -88,19 +88,19 @@ release分支的源码与master分支完全一致,但会额外修改react-native
 
 `TouchableNativeFeedback`在默认情况下, 点击时没有涟漪的, 如下图:
 
-![alt](https://smallpath.me/static/upload/201609/rEVBByWlliB3vsbmNqSfTLyY.gif)
+[默认的TouchableNativeFeedback](https://smallpath.me/static/upload/201609/rEVBByWlliB3vsbmNqSfTLyY.gif)
 
 这个BUG真让人无语, 如果点击时没涟漪, 还要你`TouchableNativeFeedback`干什么?
 
 现在大众的临时解决办法是将`TouchableNativeFeedback`的`delayPressIn`设置为`0`, 但是这样滑动ListView的时候又会触发涟漪, 如下图:
 
-![alt](https://smallpath.me/static/upload/201609/TNRKo-5Zo7kJOC1ZELUu3H7J.gif)
+[临时解决后的TouchableNativeFeedback](https://smallpath.me/static/upload/201609/TNRKo-5Zo7kJOC1ZELUu3H7J.gif)
 
 这同样并不Native
 
 使用下面的解决方法, 得到的最终效果如下:
 
-![alt](https://smallpath.me/static/upload/201609/FvHYYd41KhbGufe7NnUf3qrh.gif)
+[修改后的TouchableNativeFeedback](https://smallpath.me/static/upload/201609/FvHYYd41KhbGufe7NnUf3qrh.gif)
 
 ## 解决方法
 

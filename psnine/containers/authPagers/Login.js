@@ -19,6 +19,7 @@ import {
   TextInput,
   AsyncStorage,
   Linking,
+  Animated,
 } from 'react-native';
 
 import { connect } from 'react-redux';
@@ -32,6 +33,10 @@ import { safeLogin, registURL } from '../../dao/login';
 import { fetchUser } from '../../dao/userParser';
 
 
+let screen = Dimensions.get('window');
+
+const { width:SCREEN_WIDTH, height:SCREEN_HEIGHT } = screen;
+
 let toolbarActions = [
 
 ];
@@ -44,6 +49,9 @@ class Login extends Component {
     this.state = {
       psnid: '',
       password: '',
+      accountMarginTop: new Animated.Value(0),
+      passwordMarginTop: new Animated.Value(0),
+      avoidKeyboardMarginTop: new Animated.Value(0),
     }
   }
 
@@ -74,7 +82,7 @@ class Login extends Component {
 
       await AsyncStorage.removeItem('@psnid');
       const value = await AsyncStorage.getItem('@psnid');
-      ToastAndroid.show(`登录失败`,2000);
+      ToastAndroid.show(`登录失败,请检查账号与密码是否输入正确`,2000);
     }
 
   }
@@ -89,61 +97,228 @@ class Login extends Component {
               }).catch(err => {});
   }
 
+  onAccountTextFocus = () => {
+
+    this.state.avoidKeyboardMarginTop.setValue(1);
+
+    let text = this.accountTextInput._lastNativeText;
+    if(typeof text !='undefined' && text!=='')
+      return;
+      
+    Animated.spring(this.state.accountMarginTop,{
+      toValue: 1,
+      friction: 10
+    }).start();
+  }
+
+  onAccountTextBlur = () => {
+
+    let text = this.accountTextInput._lastNativeText;
+    if(typeof text !='undefined' && text!=='')
+      return;
+    Animated.spring(this.state.accountMarginTop,{
+      toValue: 0,
+      friction: 10
+    }).start();
+  }
+
+  onPasswordTextFocus = () => {
+
+    this.state.avoidKeyboardMarginTop.setValue(1);
+
+    let text = this.passwordTextInput._lastNativeText;
+    if(typeof text !='undefined' && text!=='')
+      return;
+      
+    Animated.spring(this.state.passwordMarginTop,{
+      toValue: 1,
+      friction: 10
+    }).start();
+  }
+
+  onPasswordTextBlur = () => {
+    let text = this.passwordTextInput._lastNativeText;
+    if(typeof text !='undefined' && text!=='')
+      return;
+    Animated.spring(this.state.passwordMarginTop,{
+      toValue: 0,
+      friction: 10
+    }).start();
+  }
+
   render() {
     // console.log('Loggin.js rendered');
+    let marginLeft = 40;
+
+    let avoidKeyboardStyle = {
+      top: this.state.avoidKeyboardMarginTop.interpolate({
+          inputRange: [0 ,1], 
+          outputRange: [SCREEN_HEIGHT/10*4-marginLeft*1.5, marginLeft]
+      }),
+    }
+
+    let accountTextStyle = {
+      top: this.state.accountMarginTop.interpolate({
+          inputRange: [0 ,1], 
+          outputRange: [40, 0]
+      }),
+      color: this.state.accountMarginTop.interpolate({
+          inputRange: [0 ,1], 
+          outputRange: [this.props.modeInfo.standardTextColor, this.props.modeInfo.standardColor]
+      }),
+    }
+
+    let passwordTextStyle = {
+      top: this.state.passwordMarginTop.interpolate({
+          inputRange: [0 ,1], 
+          outputRange: [40, 0]
+      }),
+      color: this.state.passwordMarginTop.interpolate({
+          inputRange: [0 ,1], 
+          outputRange: [this.props.modeInfo.standardTextColor, this.props.modeInfo.standardColor]
+      }),
+    }
     return (
-      <View style={{ flex: 1, backgroundColor:this.props.modeInfo.brighterLevelOne }}>
-        <ToolbarAndroid
-          navIcon={require('image!ic_back_white') }
-          title={title}
-          style={[styles.toolbar, {backgroundColor: this.props.modeInfo.standardColor,}]}
-          onIconClicked={this._pressButton}
-          />
-        <KeyboardAvoidingView behavior={'padding'} style={styles.KeyboardAvoidingView} >
-          <View style={styles.accountView}>
-            <Text style={styles.mainFont}>PSN ID :</Text>
-            <TextInput placeholder="不是邮箱" underlineColorAndroid={accentColor}
-              onChange={({nativeEvent})=>{ this.setState({psnid:nativeEvent.text})}}
-              style={[styles.textInput, { color:this.props.modeInfo.standardTextColor }]}
-              placeholderTextColor={this.props.modeInfo.standardTextColor}
+      <View style={{ flex: 1 , backgroundColor: this.props.modeInfo.standardColor }}>
+
+        <Animated.View 
+          ref={float=>this.float=float}
+          collapsable ={true}
+          style={{
+            width: 56,
+            height: 56,
+            borderRadius: 30,
+            backgroundColor: accentColor,
+            position:'absolute',
+            top: this.state.avoidKeyboardMarginTop.interpolate({
+                inputRange: [0 ,1], 
+                outputRange: [SCREEN_HEIGHT/10*4-marginLeft+28 , marginLeft+28 ]
+            }),
+            right: 12,
+            elevation: 6 ,
+            zIndex: 1,
+        }}>
+        
+        <TouchableNativeFeedback 
+          onPress={this.regist}
+          delayPressIn={0}
+          //activeOpacity={1}
+          //underlayColor={accentColor}
+          background={TouchableNativeFeedback.SelectableBackgroundBorderless()}
+          // onPressIn={()=>{
+          //   this.float.setNativeProps({
+          //     style :{
+          //     elevation: 6,
+          //   }});
+          // }}
+          // onPressOut={()=>{
+          //   this.float.setNativeProps({
+          //     style :{
+          //     elevation: 12,
+          //   }});
+          // }}
+          style={{
+            width: 56,
+            height: 56,
+            borderRadius: 30,
+            flex:1,
+            zIndex: 1,
+            backgroundColor: accentColor,
+          }}>
+          <View style={{borderRadius: 30,}}>
+            <Image source={require('image!ic_add_white')}
+                  style={{
+                    left:0,
+                    top:0,
+                }}
             />
           </View>
+        </TouchableNativeFeedback>
+        </Animated.View>
 
-          <View style={styles.passwordView}>
-            <Text style={styles.mainFont}>密码 :</Text>
-            <TextInput placeholder="你在本站完成认证时的密码" underlineColorAndroid={accentColor} secureTextEntry={true}
-              onChange={({nativeEvent})=>{ this.setState({password:nativeEvent.text})}}
-              style={[styles.textInput, { color:this.props.modeInfo.standardTextColor }]}
-              placeholderTextColor={this.props.modeInfo.standardTextColor}
-            />
-            <Text>忘记密码</Text>
+        <Animated.View style={[{ backgroundColor:this.props.modeInfo.brighterLevelOne,              
+              position: 'absolute',
+              width: SCREEN_WIDTH-marginLeft*2,
+              height: SCREEN_HEIGHT/10*6,
+              marginLeft: marginLeft,
+              bottom: marginLeft,
+              borderRadius: 5,
+              elevation:6,
+
+             
+           },avoidKeyboardStyle]}>
+
+          <View style={[styles.loginTextView,{marginLeft: marginLeft/2*1.5, marginTop:27 }]}>
+            <Text style={[styles.mainFont,{fontSize:30, marginLeft:0, marginBottom:0}]}>登录</Text>
           </View>
 
+          <View style={[styles.KeyboardAvoidingView, {
+              width: SCREEN_WIDTH-marginLeft*3,
+            }]} >
+            <View style={[styles.accountView,{ marginTop: 5,}]}>
+              <Animated.Text
+                  style={[{color: this.props.modeInfo.standardTextColor, marginLeft:5},
+                    accountTextStyle
+                  ]}>
+                  {'PSN ID'}
+              </Animated.Text>
+              <TextInput underlineColorAndroid={accentColor}
+                onChange={({nativeEvent})=>{ this.setState({psnid:nativeEvent.text})}}
+                ref={ref=>this.accountTextInput = ref}
+                onFocus={this.onAccountTextFocus}
+                onBlur={this.onAccountTextBlur}
+                style={[styles.textInput, { color:this.props.modeInfo.standardTextColor }]}
+                placeholderTextColor={this.props.modeInfo.standardTextColor}
+              />
+            </View>
 
-        </KeyboardAvoidingView>
+            <View style={[styles.passwordView,{marginTop:5}]}>
+              <Animated.Text
+                  style={[{color: this.props.modeInfo.standardTextColor, marginLeft:5},
+                    passwordTextStyle
+                  ]}>
+                  {'密码'}
+              </Animated.Text>
+              <TextInput underlineColorAndroid={accentColor} secureTextEntry={true}
+                onChange={({nativeEvent})=>{ this.setState({password:nativeEvent.text})}}
+                ref={ref=>this.passwordTextInput = ref}
+                onFocus={this.onPasswordTextFocus}
+                onBlur={this.onPasswordTextBlur}
+                style={[styles.textInput, { color:this.props.modeInfo.standardTextColor }]}
+                placeholderTextColor={this.props.modeInfo.standardTextColor}
+              />
+              <Text style={[styles.openURL,{marginTop: 10, color: this.props.modeInfo.standardColor }]}>忘记密码</Text>
+            </View>
 
-        <View style={styles.customView}>
-          <View style={styles.submit}>
-            <TouchableNativeFeedback
-              onPress={this.login}
+
+          </View>
+
+          <View style={[styles.customView,{
+            width: SCREEN_WIDTH-marginLeft*3
+          }]}>
+            <View style={styles.submit}>
+              <TouchableNativeFeedback
+                onPress={this.login}
+                >
+                <View style={styles.submitButton}>
+                  <Text style={[styles.textInput, { color:this.props.modeInfo.brighterLevelOne }]}>提交</Text>
+                </View>
+              </TouchableNativeFeedback>
+            </View>
+
+            {/*<View style={styles.regist}>
+              <Text style={[styles.textInput, { color:this.props.modeInfo.standardTextColor }]}>如果是第一次使用PSNINE，请先完成</Text>
+              <TouchableNativeFeedback
+                onPress={this.regist}
               >
-              <View style={styles.submitButton}>
-                <Text style={[styles.textInput, { color:this.props.modeInfo.titleTextColor }]}>提交</Text>
-              </View>
-            </TouchableNativeFeedback>
+                <View>
+                <Text style={styles.openURL}>PSNID认证</Text>
+                </View>
+              </TouchableNativeFeedback>
+            </View>*/}
           </View>
 
-          <View style={styles.regist}>
-            <Text style={[styles.textInput, { color:this.props.modeInfo.standardTextColor }]}>如果是第一次使用PSNINE，请先完成</Text>
-            <TouchableNativeFeedback
-              onPress={this.regist}
-            >
-              <View>
-              <Text style={styles.openURL}>PSNID认证</Text>
-              </View>
-            </TouchableNativeFeedback>
-          </View>
-        </View>
+        </Animated.View>
 
       </View>
     );
@@ -176,30 +351,43 @@ const styles = StyleSheet.create({
   },
   KeyboardAvoidingView: { 
     flex: -1, 
-    marginTop: 20,
+    marginTop: 0,
     width: width - 40,
     alignSelf:'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     flexDirection: 'column' 
   },
-  accountView: { 
-    flex: 1, 
+  loginTextView: { 
+
     flexDirection: 'column',
     justifyContent: 'space-between',
+
     margin: 10,
+    marginTop:20,
+    marginBottom:0,
+  },
+  accountView: { 
+
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+
+    marginLeft: 10,
+    marginRight: 10,
+    marginTop:20,
   },
   passwordView: { 
-    flex: 1, 
+
     flexDirection: 'column', 
-    margin: 10,
+    marginLeft: 10,
+    marginRight: 10,
     marginTop: 20,
     marginBottom: 20,
   },
   submit: { 
     flex: -1, 
-    height: 20,
+    height: 30,
     margin: 10,
-    marginTop: 30,
+    marginTop: 40,
     marginBottom: 20,
   },
   submitButton:{
