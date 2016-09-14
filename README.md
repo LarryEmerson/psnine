@@ -13,7 +13,7 @@ release分支的源码与master分支完全一致,但会额外修改react-native
 
 - [x] PanResponder Outside ListView监听冲突
 - [x] TouchableNativeFeedback无法在点击时唤出涟漪
-- [x] BackAndroid无法删除已注册事件
+- [x] Navigator push新页面时背景纯白
 
 # 从源码中构建react-native
 
@@ -142,29 +142,33 @@ release分支的源码与master分支完全一致,但会额外修改react-native
 源码里面逻辑比较乱, 涉及好多状态机, 但是状态机的状态转换全部都是同步操作, 因此我们可以通过触发指定的状态来触发涟漪动画, 最后用`setTimeout(()=>{},0)`的形式,在动画结束的正确时机触发onPress
 
 
-# BUG: BackAndroid无法删除已注册事件
+# BUG: Navigator push新页面时背景纯白
 
-如果直接构建master的源码, 很容易发现, 点击`创建讨论`页面的退出虚拟键, 将直接退出App而不是退出该页面. 原因在于这些页面并不是push到navigator中, 而是在首屏组件树中的.
-
-创建新监听事件前必须清除已经存在的事件(因为源码中用的是ES6的Set有序列表而不是Array), 但是删除时需要事件函数, 因为`BackAndroid`的事件一般都与`Navigator`搭配使用在App最顶层, 而且React强调单向数据流, 因此子组件拿顶层组件的数据非常麻烦
 
 ## 解决方法
 
-打开文件: `/react-native/Libraries/Utilities/BackAndroid.android.js`
+打开文件: `react-native/Libraries/CustomComponents/Navigator.js`
 
-在Line #83 添加如下代码:
+将Line #666 的方法修改为以下语句:
 
 ```javascript
-  clearAllListeners: function(){
-     _backPressSubscriptions.clear();
-  }
+  _disableScene: function(sceneIndex) {
+    let sceneConstructor = this.refs['scene_' + sceneIndex];
+    let nextRoute = this.state.routeStack[sceneIndex + 1];
+
+    if (nextRoute  && nextRoute.withoutAnimation && nextRoute.withoutAnimation === true) {
+        sceneConstructor.setNativeProps({
+          pointerEvents:'auto',
+          // style: {
+          //   backgroundColor: 'transparent'
+          // }
+        });
+    } else {
+        sceneConstructor.setNativeProps(SCENE_DISABLED_NATIVE_PROPS);
+    }
+  },
 ```
 
 ## BUG分析
 
-这个问题说BUG其实也不算,  虽然`BackAndroid.addEventListener`返回值里已经有一个remove对象, 但是为了避免ES6循环引用时静态解析出错, 我还是修改了一下源码, 用以应付`BackAndroid和Navigator`强耦合的问题
-
-这种解决方法仍然是治标不治本. 最好是将Set替换成Array, 再将其完全暴露出来, 这样可以将监听事件的权限完全交给开发者, 并且可以避免Set删除时十几毫秒的耗时(用户退出时如果恰好碰上这段时间,APP将直接退出而没有任何提示)
-
-
-
+RN的navigator在默认情况下, 在push的组件外面还包了一层纯白底的View, 这导致了之前的组件被覆盖, 我们修改掉这里即可
