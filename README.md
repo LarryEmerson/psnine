@@ -13,7 +13,7 @@ release分支的源码与master分支完全一致,但会额外修改react-native
 
 - [x] PanResponder Outside ListView监听冲突
 - [x] TouchableNativeFeedback无法在点击时唤出涟漪
-- [x] Navigator push新页面时背景纯白
+- [x] Navigator route间的点击穿透问题
 
 # 从源码中构建react-native
 
@@ -142,7 +142,7 @@ release分支的源码与master分支完全一致,但会额外修改react-native
 源码里面逻辑比较乱, 涉及好多状态机, 但是状态机的状态转换全部都是同步操作, 因此我们可以通过触发指定的状态来触发涟漪动画, 最后用`setTimeout(()=>{},0)`的形式,在动画结束的正确时机触发onPress
 
 
-# BUG: Navigator push新页面时背景纯白
+# BUG: Navigator route间的点击穿透问题
 
 
 ## 解决方法
@@ -159,9 +159,6 @@ release分支的源码与master分支完全一致,但会额外修改react-native
     if (nextRoute  && nextRoute.withoutAnimation && nextRoute.withoutAnimation === true) {
         sceneConstructor.setNativeProps({
           pointerEvents:'auto',
-          // style: {
-          //   backgroundColor: 'transparent'
-          // }
         });
     } else {
         sceneConstructor.setNativeProps(SCENE_DISABLED_NATIVE_PROPS);
@@ -169,6 +166,33 @@ release分支的源码与master分支完全一致,但会额外修改react-native
   },
 ```
 
+再将Line #687 的方法修改为以下语句:
+
+```javascript
+  _enableScene: function(sceneIndex) {
+    // First, determine what the defined styles are for scenes in this navigator
+    var sceneStyle = flattenStyle([styles.baseScene, this.props.sceneStyle]);
+    // Then restore the pointer events and top value for this scene
+    var enabledSceneNativeProps = {
+      pointerEvents: 'box-none',
+      style: {
+        top: sceneStyle.top,
+        bottom: sceneStyle.bottom,
+      },
+    };
+    if (sceneIndex !== this.state.transitionFromIndex &&
+        sceneIndex !== this.state.presentedIndex) {
+      // If we are not in a transition from this index, make sure opacity is 0
+      // to prevent the enabled scene from flashing over the presented scene
+      enabledSceneNativeProps.style.opacity = 0;
+    }
+
+    sceneIndex != 0 && this.refs['scene_' + sceneIndex] &&
+      this.refs['scene_' + sceneIndex].setNativeProps(enabledSceneNativeProps);
+  },
+```
+
 ## BUG分析
 
-RN的navigator在默认情况下, 在push的组件外面还包了一层纯白底的View, 这导致了之前的组件被覆盖, 我们修改掉这里即可
+RN的navigator在默认情况下, 在push的组件外面还包了一层纯白底的View, 这导致了之前的组件被覆盖, 因此我们首先去掉白底，再修改`pointerEvents`来实现点击穿透
+

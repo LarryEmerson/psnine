@@ -67,6 +67,7 @@ class NewTopic extends Component {
 
   componentDidMount = () => {
     let config = {tension: 30, friction: 7};
+    // Animated.timing(this.state.openVal, {toValue: 1, duration: 2000 ,...config}).start();
     Animated.spring(this.state.openVal, {toValue: 1, ...config}).start();
   }
 
@@ -85,17 +86,10 @@ class NewTopic extends Component {
       return;
     }
 
-    this.props.navigator.pop();
+    Animated.spring(this.state.openVal, {toValue: 0, ...config}).start(({finished})=>{
+      finished && this.props.navigator.pop();
+    });
 
-    // Animated.parallel([openVal,innerMarginTop].map((property,index) => {
-    //   if(index == 0){
-    //     return Animated.spring(property, {toValue: 0, ...config});
-    //   }else if(index == 1){
-    //     return Animated.spring(property, {toValue: 0, ...config});
-    //   }
-    // })).start(({finished})=>{
-    //   finished && this.props.navigator.pop();
-    // });
   }
 
   componentWillUnmount = async () => {
@@ -105,14 +99,17 @@ class NewTopic extends Component {
   }
 
   componentWillMount() {
+        let config = {tension: 30, friction: 7};
         this.removeListener = BackAndroid.addEventListener('hardwareBackPress',  () => {
           let value = this.state.innerMarginTop._value;
           if (Math.abs(value) >= 50) {
-            let config = {tension: 30, friction: 7};
             Animated.spring(this.state.innerMarginTop, {toValue: 0, ...config}).start();
             return true;
           }else{
-            return false;
+            Animated.spring(this.state.openVal, {toValue: 0, ...config}).start(({finished})=>{
+              finished && this.props.navigator.pop();
+            });
+            return true;
           }
         });
 
@@ -365,7 +362,11 @@ class NewTopic extends Component {
                 </View>
 
               </Animated.View>
-              <View style={{elevation: 4, bottom:0, height: 100, backgroundColor: this.props.modeInfo.standardColor }} />
+              <Animated.View style={{
+                elevation: 4, bottom:0,  backgroundColor: this.props.modeInfo.standardColor,
+                height: 100,
+                opacity: openVal.interpolate({inputRange: [0, 0.9  ,1], outputRange: [0, 0, 1]}),
+             }} />
           </AnimatedKeyboardAvoidingView>
 
         </Animated.View>
