@@ -149,7 +149,7 @@ release分支的源码与master分支完全一致,但会额外修改react-native
 
 打开文件: `react-native/Libraries/CustomComponents/Navigator.js`
 
-将Line #666 的方法修改为以下语句:
+将`_disableScene`方法修改为以下语句:
 
 ```javascript
   _disableScene: function(sceneIndex) {
@@ -166,7 +166,7 @@ release分支的源码与master分支完全一致,但会额外修改react-native
   },
 ```
 
-再将Line #687 的方法修改为以下语句:
+再将`_enableScene`的方法修改为以下语句:
 
 ```javascript
   _enableScene: function(sceneIndex) {
@@ -187,7 +187,15 @@ release分支的源码与master分支完全一致,但会额外修改react-native
       enabledSceneNativeProps.style.opacity = 0;
     }
 
-    sceneIndex != 0 && this.refs['scene_' + sceneIndex] &&
+    shouldBeClickableUnderOtherRoutes
+
+    let routes = this.getCurrentRoutes();
+
+    let shouldBeClickableUnderOtherRoutes = routes.some(value=>{
+      return value.shouldBeClickableUnderOtherRoutes && shouldBeClickableUnderOtherRoutes == true;
+    })
+
+    !shouldBeClickableUnderOtherRoutes && this.refs['scene_' + sceneIndex] &&
       this.refs['scene_' + sceneIndex].setNativeProps(enabledSceneNativeProps);
   },
 ```
