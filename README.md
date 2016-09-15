@@ -144,6 +144,7 @@ release分支的源码与master分支完全一致,但会额外修改react-native
 
 # BUG: Navigator route间的点击穿透问题
 
+这个问题也挺严重的, 它产生了三个子问题 ,十分影响Navigator不同页面间的动画
 
 ## 解决方法
 
@@ -187,20 +188,31 @@ release分支的源码与master分支完全一致,但会额外修改react-native
       enabledSceneNativeProps.style.opacity = 0;
     }
 
-    shouldBeClickableUnderOtherRoutes
-
     let routes = this.getCurrentRoutes();
 
-    let shouldBeClickableUnderOtherRoutes = routes.some(value=>{
-      return value.shouldBeClickableUnderOtherRoutes && shouldBeClickableUnderOtherRoutes == true;
+    let shouldBeClickableUnderOtherRoutes = routes.some((value,index)=>{
+      if (sceneIndex != index ){
+        return false;
+      }
+      return typeof value.shouldBeClickableUnderOtherRoutes !='undefined' && value.shouldBeClickableUnderOtherRoutes == true;
     })
 
-    !shouldBeClickableUnderOtherRoutes && this.refs['scene_' + sceneIndex] &&
+    if (shouldBeClickableUnderOtherRoutes){
+      enabledSceneNativeProps.style.opacity = 1;
+    }
+
+    this.refs['scene_' + sceneIndex] &&
       this.refs['scene_' + sceneIndex].setNativeProps(enabledSceneNativeProps);
   },
 ```
 
 ## BUG分析
 
-RN的navigator在默认情况下, 在push的组件外面还包了一层纯白底的View, 这导致了之前的组件被覆盖, 因此我们首先去掉白底，再修改`pointerEvents`来实现点击穿透
+RN的navigator在默认情况下, 在push的组件外面还包了一层纯白底的View, 这导致了之前的组件被覆盖, 并产生了三个问题
+
+- 新建页面弹出时, 背景为纯白色
+- 新建页面下滑隐藏时, 无法点击和滑动之前的页面
+- 退出新建页面时, APP会有一瞬间的白屏
+
+因此我们首先去掉白底，再修改`pointerEvents`来实现点击穿透, 最后通过自己添加的属性`shouldBeClickableUnderOtherRoutes`将白屏也取消掉
 
