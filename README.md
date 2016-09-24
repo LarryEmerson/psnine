@@ -148,7 +148,7 @@ release分支的源码与master分支完全一致,但会额外修改react-native
 
 ## 解决方法
 
-打开文件: `react-native/Libraries/CustomComponents/Navigator.js`
+打开文件: `react-native/Libraries/CustomComponents/Navigator/Navigator.js`
 
 将`_disableScene`方法修改为以下语句:
 
