@@ -3,6 +3,22 @@ Android App for [P9](http://psnine.com/) written by React Native
 
 # Release 分支说明
 
+## TODO
+- [x] 社区
+- [x] 基因
+- [x] 约战
+- [x] 问答/游戏/排行/游惠/Store/闲游
+- [x] 登录与注册
+- [x] 签到
+- [x] 奖杯显示
+- [x] 夜间主题
+- [x] Redux重构数据流
+- [x] 浮动按钮动画
+- [x] 上滑隐藏工具栏
+- [x] 新建讨论/约战/基因及其动画
+- [ ] cheerios爬取数据
+- [ ] Native化Topic/Battle/Gene的主题页面
+
 此分支为版本发布分支 
 
 release分支的源码与master分支完全一致,但会额外修改react-native的部分源码,以解决一些应用层无法修正的严重BUG
